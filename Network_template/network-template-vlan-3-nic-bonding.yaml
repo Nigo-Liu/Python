@@ -1,0 +1,302 @@
+adv_net_template:
+  default:
+    nic_mapping:
+      default:        # virt-role
+        if1: eth0     # pxe
+        if2: eth1     # storage
+        if3: eth2     # private
+        if4: eth3     # public
+        if5: eth4     # management 
+      node-1:         # compute-role
+        if1: eth0     # pxe
+        if2: eth1     # bond0
+        if3: eth2     # bond0
+      node-2:         # compute-role
+        if1: eno1     # pxe
+        if2: eno2     # bond0
+        if3: eno3     # bond0
+      node-3:         # compute-role
+        if1: enp8s0f0 # pxe
+        if2: enp8s0f1 # bond0 
+        if3: enp8s0f2 # bond0        
+
+    templates_for_node_role:
+      controller:
+        - vm_fuel_fw_admin
+        - vm_storage
+        - vm_private
+        - vm_public
+        - vm_api
+      compute:
+        - fuel_fw_admin
+        - storage
+        - private
+        - public
+        - api
+      cinder:
+        - fuel_fw_admin
+        - storage
+        - private
+        - public
+        - api
+      virt:
+        - fuel_fw_admin
+        - storage
+        - private
+        - public
+        - api
+      mongo:
+        - vm_fuel_fw_admin
+        - vm_storage
+        - vm_private
+        - vm_public
+        - vm_api          
+      ceph-osd:
+        - fuel_fw_admin
+        - storage
+        - private
+        - public
+        - api
+                  
+    network_assignments:
+      fuelweb_admin:
+        ep: br-fw-admin        
+      storage:
+        ep: br-storage
+      private:
+        ep: br-prv
+      public:
+        ep: br-ex
+      management:
+        ep: br-mgmt
+        
+    network_scheme:
+      fuel_fw_admin:
+        transformations:
+          - action: add-br
+            name: br-fw-admin
+          - action: add-port
+            bridge: br-fw-admin
+            name: <% if1 %>
+        endpoints:
+          - br-fw-admin
+        roles:
+          admin/pxe: br-fw-admin
+          fw-admin: br-fw-admin
+
+      vm_fuel_fw_admin:
+        transformations:
+          - action: add-br
+            name: br-fw-admin
+          - action: add-port
+            bridge: br-fw-admin
+            name: <% if1 %>
+        endpoints:
+          - br-fw-admin
+        roles:
+          admin/pxe: br-fw-admin
+          fw-admin: br-fw-admin
+
+      storage:
+        transformations:
+          - action: add-br
+            name: br-bond0
+          - action: add-br
+            name: br-storage
+          - action: add-bond
+            bond_properties:
+              mode: 802.3ad
+              type__: linux
+              xmit_hash_policy: layer2
+              lacp_rate: fast
+            bridge: br-bond0
+            interface_properties: {}
+            interfaces:
+            - <% if2 %>
+            - <% if3 %>
+            name: bond0
+          - action: add-port
+            bridge: br-storage
+            name: br-bond0.101
+        endpoints:
+          - br-storage
+        roles:
+          cinder/iscsi: br-storage
+          swift/replication: br-storage
+          ceph/replication: br-storage
+          storage: br-storage
+
+      vm_storage:
+        transformations:
+          - action: add-br
+            name: br-storage
+          - action: add-port
+            bridge: br-storage
+            name: <% if2 %>
+        endpoints:
+          - br-storage
+        roles:
+          cinder/iscsi: br-storage
+          swift/replication: br-storage
+          ceph/replication: br-storage
+          storage: br-storage
+      
+      private:
+        transformations:
+          - action: add-br
+            name: br-prv
+            provider: ovs
+          - action: add-patch
+            bridges:
+            - br-prv
+            - br-bond0
+            provider: ovs
+            mtu: 65000
+        endpoints:
+          - br-prv
+        roles:
+          neutron/private: br-prv
+          neturon/mesh: br-prv
+
+      vm_private:
+        transformations:
+          - action: add-br
+            name: br-prv
+          - action: add-patch
+            bridges:
+            - br-prv
+            - br-aux
+            provider: ovs
+            mtu: 65000
+          - action: add-port
+            bridge: br-aux
+            name: <% if3 %>
+        endpoints:
+          - br-prv
+        roles:
+          neutron/private: br-prv
+          neturon/mesh: br-prv
+
+      public:
+        transformations:
+          - action: add-br
+            name: br-ex
+          - action: add-br
+            name: br-floating
+            provider: ovs
+          - action: add-patch
+            bridges:
+            - br-floating
+            - br-ex
+            provider: ovs
+            mtu: 65000
+          - action: add-port
+            bridge: br-ex
+            name: br-bond0.1056            
+        endpoints:
+          - br-ex
+        roles:
+          public/vip: br-ex
+          neutron/floating: br-floating
+          ceph/radosgw: br-ex
+          ex: br-ex
+
+      vm_public:
+        transformations:
+          - action: add-br
+            name: br-ex
+          - action: add-br
+            name: br-floating
+            provider: ovs
+          - action: add-patch
+            bridges:
+            - br-floating
+            - br-ex
+            provider: ovs
+            mtu: 65000
+          - action: add-port
+            bridge: br-ex
+            name: <% if4 %>
+        endpoints:
+          - br-ex
+        roles:
+          public/vip: br-ex
+          neutron/floating: br-floating
+          ceph/radosgw: br-ex
+          ex: br-ex
+          
+      api:
+        transformations:
+          - action: add-br
+            name: br-mgmt
+          - action: add-port
+            bridge: br-mgmt
+            name: br-bond0.102
+        endpoints:
+          - br-mgmt
+        roles:
+          mongo/db: br-mgmt
+          management: br-mgmt
+          keystone/api: br-mgmt
+          neutron/api: br-mgmt
+          swift/api: br-mgmt
+          sahara/api: br-mgmt
+          ceilometer/api: br-mgmt
+          cinder/api: br-mgmt
+          glance/api: br-mgmt
+          heat/api: br-mgmt
+          nova/api: br-mgmt
+          nova/migration: br-mgmt
+          murano/api: br-mgmt
+          murano/cfapi: br-mgmt
+          horizon: br-mgmt
+          mgmt/api: br-mgmt
+          mgmt/memcache: br-mgmt
+          mgmt/database: br-mgmt
+          mgmt/messaging: br-mgmt
+          mgmt/corosync: br-mgmt
+          mgmt/vip: br-mgmt
+          mgmt/api: br-mgmt
+          ceph/public: br-mgmt
+          ironic/api: br-mgmt
+          ironic/baremetal: br-mgmt
+          aodh/api: br-mgmt
+          zabbix: br-mgmt
+          
+      vm_api:
+        transformations:
+          - action: add-br
+            name: br-mgmt
+          - action: add-port
+            bridge: br-mgmt
+            name: <% if5 %>
+        endpoints:
+          - br-mgmt
+        roles:
+          mongo/db: br-mgmt
+          management: br-mgmt
+          keystone/api: br-mgmt
+          neutron/api: br-mgmt
+          swift/api: br-mgmt
+          sahara/api: br-mgmt
+          ceilometer/api: br-mgmt
+          cinder/api: br-mgmt
+          glance/api: br-mgmt
+          heat/api: br-mgmt
+          nova/api: br-mgmt
+          nova/migration: br-mgmt
+          murano/api: br-mgmt
+          murano/cfapi: br-mgmt
+          horizon: br-mgmt
+          mgmt/api: br-mgmt
+          mgmt/memcache: br-mgmt
+          mgmt/database: br-mgmt
+          mgmt/messaging: br-mgmt
+          mgmt/corosync: br-mgmt
+          mgmt/vip: br-mgmt
+          mgmt/api: br-mgmt
+          ceph/public: br-mgmt
+          ironic/api: br-mgmt
+          ironic/baremetal: br-mgmt
+          aodh/api: br-mgmt
+          zabbix: br-mgmt

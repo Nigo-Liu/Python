@@ -1,0 +1,11 @@
+    network_assignments:
+      fuelweb_admin:
+        ep: br-fw-admin
+      storage:
+        ep: br-storage
+      private:
+        ep: br-mesh
+      public:
+        ep: br-ex
+      management:
+        ep: br-mgmt

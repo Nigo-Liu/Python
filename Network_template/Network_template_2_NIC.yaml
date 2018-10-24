@@ -1,0 +1,15 @@
+adv_net_template:
+  default:
+    nic_mapping:
+      default: {if1: eth0, if2: eth1, if3: eth2, if4: eth3, if5: eth4}
+      node-1: {admin: eno1, api: eno2.102, priv: eno2, pub: eno2.1056, storage: eno2.101}
+      node-2: {admin: eth0, api: eth1.102, priv: eth1, pub: eth1.1056, storage: eth1.101}
+      node-3: {admin: enp8s0f0, api: enp8s0f1.102, priv: enp8s0f1, pub: enp8s0f1.1056,
+        storage: enp8s0f1.101}
+    templates_for_node_role:
+      ceph-osd: [fuel_fw_admin, private, storage, public, api]
+      cinder: [fuel_fw_admin, private, storage, public, api]
+      compute: [fuel_fw_admin, private, storage, public, api]
+      controller: [vm_fuel_fw_admin, vm_private, vm_storage, vm_public, vm_api]
+      mongo: [vm_fuel_fw_admin, vm_private, vm_storage, vm_public, vm_api]
+      virt: [fuel_fw_admin, private, storage, public, api]

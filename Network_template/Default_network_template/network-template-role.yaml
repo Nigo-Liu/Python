@@ -1,0 +1,36 @@
+      controller:
+        - vm_fuel_fw_admin
+        - vm_private
+        - vm_storage
+        - vm_public
+        - vm_api
+      compute:
+        - fuel_fw_admin
+        - private
+        - storage
+        - public
+        - api
+      cinder:
+        - fuel_fw_admin
+        - private
+        - storage
+        - public
+        - api
+      virt:
+        - fuel_fw_admin
+        - private
+        - storage
+        - public
+        - api
+      mongo:
+        - vm_fuel_fw_admin
+        - vm_private
+        - vm_storage
+        - vm_public
+        - vm_api
+      ceph-osd:
+        - fuel_fw_admin
+        - private
+        - storage
+        - public
+        - api
