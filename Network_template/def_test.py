@@ -63,9 +63,16 @@ def dict_to_yaml(filename):
 	d = yaml.dump(filename)
 	return d 
 
-def dict_get_values(dict_file, value):
-	v = dict_file.get(value)
-	return v	
+def dict_get_keys(filename):
+	k = filename.keys()
+	return k	
+
+def dict_get_values( filename ):
+	dict_file = yaml_to_dict( filename )
+	key = dict_get_keys ( dict_file )
+	return key
+		
+
 
 dict_network_assignments = yaml_to_dict('network-template-vxlan-network_assignments.yaml')
 dict_network_scheme_physical = yaml_to_dict('network-template-vxlan-network_scheme-physical.yaml')
@@ -73,8 +80,8 @@ dict_network_scheme_vm = yaml_to_dict('network-template-vxlan-network_scheme-vm.
 dict_nic_mapping = yaml_to_dict('network-template-nic_mapping.yaml')
 dict_node_role = yaml_to_dict('network-template-role.yaml')
 
-d = dict_get_values(dict_nic_mapping, 'node-1')
-print d
+x = dict_get_values( 'network-template-nic_mapping.yaml' )
+print x
 
 dict_nic_mapping_shell['nic_mapping']['default'] = dict_nic_mapping['default']
 dict_nic_mapping_shell['nic_mapping']['node-1'] = dict_nic_mapping['node-1']
@@ -87,7 +94,7 @@ dict_shell['adv_net_template']['default']['nic_mapping'] = dict_nic_mapping_shel
 dict_shell['adv_net_template']['default']['templates_for_node_role'] = dict_node_role_shell['templates_for_node_role']
 
 d = dict_to_yaml(dict_shell)
-print d
+# print d
 
 # modify_nic_mapping(nic='eth10')
 # dict_nic_mapping_shell['nic_mapping']['default'] = dict_nic_mapping['default']
