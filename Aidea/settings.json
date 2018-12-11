@@ -2,5 +2,6 @@
 	"account": "admin",
 	"password": "password",
 	"GOC_endpoint": "https://10.113.101.25:443",
-	
+	"tenant_id": "8787"
+
 }
