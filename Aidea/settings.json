@@ -1,7 +1,6 @@
 {
 	"account": "admin",
-	"password": "password",
-	"GOC_endpoint": "https://10.113.101.25:443",
-	"tenant_id": "8787"
-
+	"password": "admin",
+	"GOC_endpoint": "https://10.18.100.81:443",
+	"headers": "Content-Type: application/json"
 }
