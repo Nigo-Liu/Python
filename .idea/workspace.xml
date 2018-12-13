@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0ebfc866-934f-4e2c-8a39-b84676cea325" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/tutorial/tutorial_2/snippets/serializers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Aidea/api_client_main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Aidea/goc_paas_client.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Aidea/job_function.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,7 +30,7 @@
         <entry file="file://$PROJECT_DIR$/tutorial/tutorial_2/snippets/serializers.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="120">
-              <caret line="8" lean-forward="true" selection-start-line="8" selection-end-line="8" />
+              <caret line="8" selection-start-line="8" selection-end-line="8" />
               <folding>
                 <element signature="e#0#38#0" expanded="true" />
               </folding>
@@ -39,8 +41,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../Downloads/s3foldertest.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="714">
-              <caret line="42" column="29" lean-forward="true" selection-start-line="42" selection-start-column="29" selection-end-line="42" selection-end-column="29" />
+            <state relative-caret-position="212">
+              <caret line="42" column="29" selection-start-line="42" selection-start-column="29" selection-end-line="42" selection-end-column="29" />
               <folding>
                 <element signature="e#22#32#0" expanded="true" />
               </folding>
@@ -64,10 +66,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="1">
-    <option name="x" value="-348" />
+    <option name="x" value="-309" />
     <option name="y" value="-1057" />
-    <option name="width" value="1920" />
-    <option name="height" value="1057" />
+    <option name="width" value="1232" />
+    <option name="height" value="777" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -142,19 +144,19 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1543461238375</updated>
-      <workItem from="1543461245026" duration="4042000" />
+      <workItem from="1543461245026" duration="4153000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="4042000" />
+    <option name="totallyTimeSpent" value="4153000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-348" y="-1057" width="1920" height="1057" extended-state="1" />
+    <frame x="-309" y="-1057" width="1232" height="777" extended-state="1" />
     <editor active="true" />
     <layout>
       <window_info id="Favorites" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.15548456" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24537815" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Docker" show_stripe_button="false" />
       <window_info anchor="bottom" id="Database Changes" />
@@ -237,7 +239,7 @@
     <entry file="file://$PROJECT_DIR$/tutorial/tutorial_2/snippets/serializers.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
-          <caret line="8" lean-forward="true" selection-start-line="8" selection-end-line="8" />
+          <caret line="8" selection-start-line="8" selection-end-line="8" />
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>
@@ -246,8 +248,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../Downloads/s3foldertest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="714">
-          <caret line="42" column="29" lean-forward="true" selection-start-line="42" selection-start-column="29" selection-end-line="42" selection-end-column="29" />
+        <state relative-caret-position="212">
+          <caret line="42" column="29" selection-start-line="42" selection-start-column="29" selection-end-line="42" selection-end-column="29" />
           <folding>
             <element signature="e#22#32#0" expanded="true" />
           </folding>
