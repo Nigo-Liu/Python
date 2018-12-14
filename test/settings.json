@@ -1,0 +1,6 @@
+{
+	"account": "admin",
+	"password": "admin",
+	"GOC_endpoint": "https://10.113.101.25:443",
+	"headers": "Content-Type: application/json"
+}

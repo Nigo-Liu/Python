@@ -1,5 +1,7 @@
 import request_utils
+import logging
 
+logger = logging.getLogger(__name__)
 
 class Jobs():
     def __init__(self, ip):
@@ -10,21 +12,18 @@ class Jobs():
         self.req_patch = req.req_patch
         self.req_put = req.req_put
 
-    def create_job(self, group_id, job_type, job_image, job_flavor, job_name, schedule=None, volumes=None, az=None, runs=None, command=None, job_template=None):
+    def create_job(self, group_id, job_type, job_image, job_flavor, job_name, schedule='', volumes=[], az='', runs=1, command=''):
         service_url = "/v2/jobs/"
         post_data = {'data': {'project': group_id,
                      'type': job_type, 'image': job_image, 'flavor': job_flavor, 'name': job_name, 'schedule':schedule, 'volumes': volumes, 'availability_zone': az, 'runs': runs, 'command': command}}
-        if job_template is not None:
-            post_data['files'] = {'data': job_template}
         return self.req_post(url=service_url, **post_data)
                     
     def submit_job(self, job_id, action):
-        service_url = "/v2/jobs/"
-        post_data = {'data': {'job_id': job_id, 'action': action}}
-        return self.req_post(url=service_url, **post_data)
+        service_url = "/v2/jobs/%(job_id)s/%(action)s" % {'job_id': job_id, 'action': action}
+        return self.req_post(url=service_url)
 
-    def update_job(self, group_id, job_type, job_image, job_flavor, job_name, schedule=None, volumes=None, az=None, runs=None, command=None, job_template=None):
-        service_url = "/v2/jobs" 
+    def update_job(self, group_id, job_type, job_image, job_flavor, job_name, schedule='', volumes=[], az='', runs=1, command=''):
+        service_url = "/v2/jobs/" 
         post_data = {'data': {'project': group_id,
                      'type': job_type, 'image': job_image, 'flavor': job_flavor, 'name': job_name, 'schedule':schedule, 'volumes': volumes, 'availability_zone': az, 'runs': runs, 'command': command}}
         return self.req_patch(url=service_url, **post_data)
