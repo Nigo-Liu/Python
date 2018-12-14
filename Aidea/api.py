@@ -2,10 +2,19 @@ import requests
 import json
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 
+def get_status_code_and_json(self, response):
+    try:
+        return response.status_code, response.json()
+    except Exception:
+        return response.status_code, None
+
+
+def get_users(self, endpoint, headers):
+    url = '{0}/api/v2/users'.format(endpoint)
+    return self.requests.get(url=url, headers=headers, auth=('admin','admin'))
 
 def get_job_list(self):
     project_id = configs.tenant_id
@@ -73,50 +82,23 @@ def update_job(self, job_id, job_name=None, job_image=None,
                command=None, schedule=None,
                server=None, location=None, mountPath=None):
     try:
-        # logger.debug(job_id)
         url = '{0}/jobs/{1}/'.format(self._url, job_id)
         data = {
 
         }
-        # logger.debug(job_name)
         if job_name:
             data['name'] = job_name
-        # logger.debug(job_type)
-        # if job_type:
-        #     data['type'] = job_type
-        # logger.debug(job_image)
         if job_image:
             data['image'] = job_image
-        # logger.debug(type(job_flavor))
-        # if job_flavor:
-        #     data['flavor'] = job_flavor
-        # logger.debug(command)
         if command:
             data['command'] = command
-        # logger.debug(schedule)
         if schedule:
             data['schedule'] = schedule
-        # logger.debug(a_zone)
-        # if a_zone:
-        #     data['availability_zone'] = a_zone
-        # logger.debug(runs)
-        # if runs:
-        #     data['runs'] = runs
-        # logger.debug(server)
-        # logger.debug(location)
-        # logger.debug(mountPath)
+
         if server and location and mountPath:
             data['volumes'] = [{'server': server,
                                 'location': location,
                                 'mountPath': mountPath}]
-        # if server and location and mountPath:
-        #     data['volumes'][0]['server'] = server,
-        #     data['volumes'][0]['location'] = location,
-        #     data['volumes'][0]['mountPath'] = mountPath
-        # if location:
-        #     data['volumes'][0]['location'] = location
-        # if mountPath:
-                    #     data['volumes'][0]['mountPath'] = mountPath
         logger.debug(url)
         logger.debug(data)
         return self.get_status_code_and_json(requests.patch(
@@ -136,12 +118,6 @@ def get_job_run_detail(self, job_id, run_id):
     return self.get_status_code_and_json(requests.get(
         url=url, headers=self._headers, verify=False))
 
-# To be modify
-# def get_job_run_type(self, job_id, run_id, run_type):
-#     url = '{0}/jobs/{1}/runs/{2}/{3}/'.format(
-#         self._url, job_id, run_id, run_type)
-#     return self.get_status_code_and_json(requests.get(
-#         url=url, headers=self._headers, verify=False))
 
 def stop_job_run_type(self, job_id, run_id, run_type_stop):
     try:
@@ -155,7 +131,6 @@ def stop_job_run_type(self, job_id, run_id, run_type_stop):
         return None
 
 def job_action(self, job_id, action):
-    # *** job action submit / stop  ***
     try:
         url = '{0}/jobs/{1}/{2}/'.format(self._url, job_id, action)
         return self.get_status_code_and_json(requests.post(
