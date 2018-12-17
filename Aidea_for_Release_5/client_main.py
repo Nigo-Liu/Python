@@ -18,8 +18,8 @@ if __name__ == '__main__':
     # cg = client.groups.create_group('Aidea_2')
     # print cg
 
-    lg = client.groups.list_groups()
-    print lg
+    # lg = client.groups.list_groups()
+    # print lg
  
     # gd = client.groups.get_detail(4)
     # print gd 
@@ -28,22 +28,22 @@ if __name__ == '__main__':
 
     # cu = client.users.create_users('nigo_test_2', 'password', 'nigo@gemini.com')
 
-    gu = client.users.get_users()
-    print gu
+    # gu = client.users.get_users()
+    # print gu
     
     # a = client.users.associate(3, 4)
         
     print '====== Flavor ======='
 
-    f = client.flavors.list_flavors()
-    print f
+    # f = client.flavors.list_flavors()
+    # print f
 
     print '====== Job ======='
 
     # cj = client.jobs.create_job(3, 'KUBERNETES:DOCKER', 'alpine:3.7', 17, 'post_test_13', 'sleep 60s')
     # print cj
 
-    lj = client.jobs.list_jobs()
+    lj = client.jobs.list_jobs("slurm")
     print lj
 
     # jd = client.jobs.get_job_detail(8)

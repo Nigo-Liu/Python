@@ -37,8 +37,8 @@ class Jobs():
         params = {'job_id': job_id, 'run_id': run_id}
         return self.req_get(url=service_url, params=params)
         
-    def list_jobs(self, group_id=None, job_type=None):
-        service_url = "/v2/jobs/"
+    def list_jobs(self, platform_name, group_id=None, job_type=None):
+        service_url = "/v2/%s/jobs/" % platform_name
         params = {'project': group_id, 'type': job_type}
         return self.req_get(url=service_url, params=params)
 
