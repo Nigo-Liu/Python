@@ -1,56 +1,119 @@
 import json
 import sys
-import api
 from v2 import client
 
 
 if __name__ == '__main__':
+
+    # _argv_ip = sys.argv[1]
+    # _argv_account = sys.argv[2]
+    # _argv_password = sys.argv[3]
     
-    _argv_ip = sys.argv[1]
-    _argv_account = sys.argv[2]
-    _argv_password = sys.argv[3]
-  
-    client = client.Client(_argv_ip, _argv_account, _argv_password)
+    client = client.Client('10.51.0.96', 'admin', 'admin')
 
-
-    print '====== Project ======='
-
-    # cg = client.groups.create_group('Aidea_2')
-    # print cg
-
-    # lg = client.groups.list_groups()
-    # print lg
- 
-    # gd = client.groups.get_detail(4)
-    # print gd 
-
-    print '====== User =======' 
-
-    # cu = client.users.create_users('nigo_test_2', 'password', 'nigo@gemini.com')
+    # print '====== List_Users =======' 
 
     # gu = client.users.get_users()
     # print gu
+            
+    # print '====== List_Projects ======='
+
+    # lg = client.groups.list_groups('slurm')
+    # print lg
     
-    # a = client.users.associate(3, 4)
-        
-    print '====== Flavor ======='
+    # print '====== List_Flavors ======='
 
-    # f = client.flavors.list_flavors()
+    # f = client.flavors.list_flavors('slurm')
     # print f
+       
+    # print '====== Create_Job ======='
 
-    print '====== Job ======='
+    # create_job_1 = client.jobs.create_job('slurm', 1, 'SLURM:SINGULARITY', 'docker://alpine:3.7', 1, 'aidea_demo_1', 'step-1', 'step-2', command_1='echo hello aidea_demo_1 >/aidea/test1.txt', path='/aidea', mountPath='/aidea', _type='HOSTPATH',  command_2='cat /aidea/test1.txt', schedule='', runs=1, dependency_policy='AFTEROK')
+    # print create_job_1
 
-    # cj = client.jobs.create_job(3, 'KUBERNETES:DOCKER', 'alpine:3.7', 17, 'post_test_13', 'sleep 60s')
-    # print cj
+    # create_job_2 = client.jobs.create_job('slurm', 1, 'SLURM:SINGULARITY', 'docker://alpine:3.7', 1, 'aidea_demo_2', 'step-1', 'step-2', command_1='echo hello aidea_demo_2 >/aidea/test2.txt', path='/aidea', mountPath='/aidea', _type='HOSTPATH',  command_2='cat /aidea/test2.txt', schedule='', runs=1, dependency_policy='AFTEROK')
+    # print create_job_2
 
-    lj = client.jobs.list_jobs("slurm")
-    print lj
+    # create_job_3 = client.jobs.create_job('slurm', 1, 'SLURM:SINGULARITY', 'docker://alpine:3.7', 1, 'aidea_demo_3', 'step-1', 'step-2', command_1='echo hello aidea_demo_3 >/aidea/test3.txt', path='/aidea', mountPath='/aidea', _type='HOSTPATH',  command_2='cat /aidea/test3.txt', schedule='', runs=1, dependency_policy='AFTEROK')
+    # print create_job_3
+    
+    # print '====== List_Jobs ======='  
+    
+    # lj = client.jobs.list_jobs("slurm")
+    # print lj
 
-    # jd = client.jobs.get_job_detail(8)
+    print ('====== List_Jobs_Detail =======')
+    ljd5 = client.jobs.get_job_detail("slurm", 5)
+    print (ljd5)
+
+    ljd6 = client.jobs.get_job_detail("slurm", 6)
+    print (ljd6)
+
+    ljd7 = client.jobs.get_job_detail("slurm", 7)
+    print (ljd7)
+
+
+    # print '====== Submit_Job ======='
+    
+    # sj4 = client.jobs.submit_job('slurm', 4, 'submit')
+    # print sj4
+
+    # sj5 = client.jobs.submit_job('slurm', 5, 'submit')
+    # print sj5
+
+    # sj6 = client.jobs.submit_job('slurm', 6, 'submit')
+    # print sj6
+
+    # sj7 = client.jobs.submit_job('slurm', 7, 'submit')
+    # print sj7
+
+    print ('====== Get_Job_runs =======')
+
+    # gr3 = client.jobs.get_runs('slurm', 3)
+    # print gr3
+
+    # gr4 = client.jobs.get_runs('slurm', 4)
+    # print gr4
+
+    gr5 = client.jobs.get_runs('slurm', 5)
+    print (gr5)
+
+    gr6 = client.jobs.get_runs('slurm', 6)
+    print (gr6)
+
+    gr7 = client.jobs.get_runs('slurm', 7)
+    print (gr7)
+
+    print ('====== Get_logs =======')
+    
+    # gl = client.jobs.get_logs('slurm', 4, 2)
+    # print gl  
+
+    gl5_1 = client.jobs.get_logs('slurm', 5, 1)
+    print (gl5_1)
+
+    gl5_2 = client.jobs.get_logs('slurm', 5, 2)
+    print (gl5_2)
+
+    gl6_1 = client.jobs.get_logs('slurm', 6, 1)
+    print (gl6_1)
+
+    gl6_2 = client.jobs.get_logs('slurm', 6, 2)
+    print (gl6_2)
+
+    gl7_1 = client.jobs.get_logs('slurm', 7, 1)
+    print (gl7_1)
+
+    gl7_2 = client.jobs.get_logs('slurm', 7, 2)
+    print (gl7_2)     
+
+    # jd = client.jobs.get_job_detail('slurm', 2)
     # print jd
 
-    # sj = client.jobs.submit_job(9, 'submit')
+    # sj = client.jobs.submit_job('slurm', 3, 'stop')
     # print sj
+    
+
 
     # lj = client.jobs.list_jobs()
     # print lj

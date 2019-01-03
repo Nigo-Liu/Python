@@ -17,6 +17,12 @@ class Jobs():
         post_data = {'data': {'project': group_id,
                      'type': job_type, 'image': job_image, 'flavor': job_flavor, 'name': job_name, 'volumes': volumes, 'runs': runs, 'command': command, 'schedule':schedule, 'availability_zone': az}}
         return self.req_post(url=service_url, **post_data)
+
+    def create_job_volume(self, group_id, job_type, job_image, job_flavor, job_name, command='', server=' ', location=' ', mountPath=' ', schedule=' ', az='default',  runs=1):
+        service_url = "/v2/jobs/"
+        post_data = {'data': {'project': group_id,
+                     'type': job_type, 'image': job_image, 'flavor': job_flavor, 'name': job_name, 'volumes': [{'server': server, 'location': location, 'mountPath': mountPath}], 'runs': runs, 'command': command, 'schedule':schedule, 'availability_zone': az}}
+        return self.req_post(url=service_url, **post_data)
                     
     def submit_job(self, job_id, action):
         service_url = "/v2/jobs/%(job_id)s/%(action)s/" % {'job_id': job_id, 'action': action}

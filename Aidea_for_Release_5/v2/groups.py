@@ -17,8 +17,8 @@ class Groups():
                 'sp_admin': sp_admin, 'sp_admin_passwd': sp_admin_passwd}
         return self.req_post(url=service_url, data=data)
 
-    def list_groups(self):
-        service_url = "/v2/groups/"
+    def list_groups(self, platform_name):
+        service_url = "/v2/%s/projects/" % platform_name 
         return self.req_get(url=service_url)
 
     def get_detail(self, group_id):
@@ -26,51 +26,5 @@ class Groups():
         service_url = service_url % ({'group_id': group_id})
         return self.req_get(url=service_url)
 
-    def get_solutions(self, group_id):
-        service_url = "/v2/groups/%(group_id)s/solutions/"
-        service_url = service_url % ({'group_id': group_id})
-        return self.req_get(url=service_url)
 
-    def update_solutions(self, group_id, solutions):
-        service_url = "/v2/groups/%(group_id)s/solutions/"
-        service_url = service_url % ({'group_id': group_id})
-        data = {'solutions': solutions}
-        return self.req_put(url=service_url, data=data)
-
-    def add_solution(self, group_id, solution_id):
-        service_url = "/v2/groups/%(group_id)s/solutions/%(solution_id)s/"
-        service_url = service_url % ({'group_id': group_id,
-                                      'solution_id': solution_id})
-        return self.req_put(url=service_url)
-
-    def remove_solution(self, group_id, solution_id):
-        service_url = "/v2/groups/%(group_id)s/solutions/%(solution_id)s/"
-        service_url = service_url % ({'group_id': group_id,
-                                      'solution_id': solution_id})
-        return self.req_delete(url=service_url)
-
-    def update_quota(self, group_id, quotas):
-        service_url = "/v2/groups/%(group_id)s/quota/"
-        service_url = service_url % ({'group_id': group_id})
-        return self.req_patch(url=service_url,
-                              data=quotas)
-
-    def get_assets_reports(self, group_id=None,
-                           begin_time=None, end_time=None):
-        service_url = "/v2/groups/reports/assets/"
-        params = {'group_id': group_id}
-        if begin_time:
-            params.update({'begin_time': begin_time})
-        if end_time:
-            params.update({'end_time': end_time})
-        return self.req_get(url=service_url, params=params)
-
-    def get_statistics_reports(self, group_id=None,
-                               begin_time=None, end_time=None):
-        service_url = "/v2/groups/reports/statistics/"
-        params = {'group_id': group_id}
-        if begin_time:
-            params.update({'begin_time': begin_time})
-        if end_time:
-            params.update({'end_time': end_time})
-        return self.req_get(url=service_url, params=params)
+ 

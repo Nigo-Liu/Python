@@ -1,6 +1,7 @@
 from v2 import groups, users
 from v2 import jobs
 from v2 import flavors
+from v2 import availability_zones
 
 
 class Client():
@@ -9,3 +10,4 @@ class Client():
         self.groups = groups.Groups(ip, account, password)
         self.jobs = jobs.Jobs(ip, account, password)
         self.flavors = flavors.Flavors(ip, account, password)
+        self.availability_zones = availability_zones.AvailabilityZones(ip, account, password)

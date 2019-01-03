@@ -15,8 +15,8 @@ class Flavors():
         post_data = {'data': {'name': flavor_name, 'type': flavor_type, 'desc': desc, 'cpu': cpu, 'memory': memory, 'disk': disk, 'gpu': gpu, 'metadata': metadata}}
         return self.req_post(url=service_url, **post_data)
 
-    def list_flavors(self, flavor_type=None):
-        service_url = "/v2/flavors/"
+    def list_flavors(self, platform_name, flavor_type=None):
+        service_url = "/v2/%s/flavors/" % platform_name
         params = {'type': flavor_type}
         return self.req_get(url=service_url, params=params)
 

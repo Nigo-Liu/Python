@@ -21,6 +21,10 @@ class Users():
                 'email': email}
         return self.req_post(url=service_url,
                              data=data)
+        
+    def delete_users(self, user_id):
+        service_url = "/v2/users/%s/" % user_id
+        return self.req_delete(url=service_url)
 
     def associate(self, user_id, group_id, role_id=None):
         service_url = "/v2/users/%s/associations/" % user_id
