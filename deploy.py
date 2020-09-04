@@ -65,18 +65,39 @@ def deploy_components():
             ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
             ip_command = " ".join(ip_exec)
             t = 1
-            while t < 5:
-                ip_address = subprocess.check_output(ip_command, timeout=5).decode('utf-8') 
+            while t < 8:
+                print (t)
+                ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
                 if ip_address.strip():
                     break
                     return ip_address
                 else:
                     t += 1
-            gdms_link = 'http://' + ip_address + ':8080/GDMSWeb/'
-            label['text'] = gdms_link
+            if ip_address == "":
+                gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
+                label['text'] = gdms_link
+            else:
+                gdms_link = 'http://' + ip_address + ':8080/GDMSWeb/'
+                label['text'] = gdms_link
         if host_name in host_list.decode('utf-8'):
-            gdms_link = 'GDMS already installed on your RTX Package, plz check your kvm list.'
-            label['text'] = gdms_link
+            mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+            ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+            ip_command = " ".join(ip_exec)
+            t = 1
+            while t < 8:
+                print (t)
+                ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
+                if ip_address.strip():
+                    break
+                    return ip_address
+                else:
+                    t += 1
+            if ip_address == "":
+                gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
+                label['text'] = gdms_link
+            else:
+                gdms_link = 'http://' + ip_address + ':8080/GDMSWeb/'
+                label['text'] = gdms_link
     elif (var1.get() == 0) & (var2.get() == 0) & (var3.get() == 1) :
         check_output('./deploy_harbor.sh', shell=True)
         harbor_link = 'https://rtxws.com:8443'
