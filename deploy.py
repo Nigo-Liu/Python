@@ -1,5 +1,5 @@
 import tkinter as tk
-#import docker
+import docker
 import os
 from subprocess import check_output, STDOUT
 import threading
@@ -9,13 +9,13 @@ import time
 import subprocess
 from PIL import Image
 
-
 # setting initial path at "/home/ubuntu/Desktop"
 os.chdir("/home/ubuntu/Desktop")
 
+# 
 window = tk.Tk()
 window.title('LEADTEK')
-window.geometry('800x350')
+window.geometry('800x370')
 window.configure(background='white')
 
 var = tk.StringVar()
@@ -66,7 +66,6 @@ def deploy_components():
             ip_command = " ".join(ip_exec)
             t = 1
             while t < 8:
-                print (t)
                 ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
                 if ip_address.strip():
                     break
@@ -77,7 +76,7 @@ def deploy_components():
                 gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
                 label['text'] = gdms_link
             else:
-                gdms_link = 'http://' + ip_address + ':8080/GDMSWeb/'
+                gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
                 label['text'] = gdms_link
         if host_name in host_list.decode('utf-8'):
             mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
@@ -85,7 +84,6 @@ def deploy_components():
             ip_command = " ".join(ip_exec)
             t = 1
             while t < 8:
-                print (t)
                 ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
                 if ip_address.strip():
                     break
@@ -96,12 +94,17 @@ def deploy_components():
                 gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
                 label['text'] = gdms_link
             else:
-                gdms_link = 'http://' + ip_address + ':8080/GDMSWeb/'
+                gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
                 label['text'] = gdms_link
     elif (var1.get() == 0) & (var2.get() == 0) & (var3.get() == 1) :
-        check_output('./deploy_harbor.sh', shell=True)
-        harbor_link = 'https://rtxws.com:8443'
-        label3['text'] = harbor_link
+        os.chdir("/home/ubuntu/harbor-master")
+        harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        harbor = "harbor"
+        if harbor not in harbor_list:
+            os.chdir("/home/ubuntu/harbor-master")
+            check_output('sudo docker-compose up -d', shell=True)
+            harbor_link = 'https://rtxws.com:8443'
+            label3['text'] = harbor_link
     elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 0) :
         check_output('./run_netdata.sh', shell=True)
         netdata_link = 'http://172.16.10.153:19999'
@@ -114,15 +117,28 @@ def delete_components():
         host_name = "gdms"
         host_list = check_output("virsh list | sed -n '3, 1p' | awk '{print $2}'", shell=True)
         if host_name in host_list.decode('utf-8'):
-            check_output("virsh destroy gdms", shell=True)           
+            check_output("virsh destroy gdms", shell=True)
+            gdms_link = 'GDMS removed.'
+            label['text'] = gdms_link
+        else:
+            gdms_link = 'GDMS doesn`t installed.'
+            label['text'] = gdms_link            
     elif (var1.get() == 0) & (var2.get() == 0) & (var3.get() == 1) :
-        check_output('./deploy_harbor.sh', shell=True)
-        harbor_link = 'https://rtxws.com:8443'
-        label2['text'] = harbor_link
+        os.chdir("/home/ubuntu/harbor-master")
+        harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        harbor = "harbor"
+        if harbor in harbor_list:
+            os.chdir("/home/ubuntu/harbor-master")
+            check_output('sudo docker-compose down -v', shell=True)
+            harbor_link = 'harbor removed.'
+            label3['text'] = harbor_link
+        else:
+            harbor_link = 'harbor doesn`t installed.'
+            label3['text'] = harbor_link
     elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 0) :
         check_output('./run_netdata.sh', shell=True)
         netdata_link = 'http://172.16.10.153:19999'
-        label3['text'] = netdata_link
+        label2['text'] = netdata_link
     else:
         print("To do something.")
 
@@ -145,17 +161,27 @@ def show_endpoint():
     global harbor_link
     global netdata_link    
     if (var1.get() == 1) & (var2.get() == 0) & (var3.get() == 0) :
-        ip_address = ""
+        mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+        ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+        ip_command = " ".join(ip_exec)
         t = 1
-        while t < 20: 
-            t += 1
-            ip_address = check_output("./find_ip.sh").decode('utf-8')
+        while t < 8:
+            ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
             if ip_address.strip():
                 break
                 return ip_address
-        gdms_link = 'http://' + ip_address + ':8080/GDMSWeb/'
-        label_e1['text'] = gdms_link
+            else:
+                t += 1
+        if ip_address == "":
+            gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
+            label_e1['text'] = gdms_link
+        else:
+            gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
+            label_e1['text'] = gdms_link
     elif (var1.get() == 0) & (var2.get() == 0) & (var3.get() == 1) :
+        os.chdir("/home/ubuntu/harbor-master")
+        docker_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        print(docker_list)
         harbor_link = 'https://rtxws.com:8443'
         label_e3['text'] = harbor_link
     elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 0) :
