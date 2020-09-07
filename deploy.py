@@ -1,6 +1,7 @@
 import tkinter as tk
 import docker
 import os
+from os import listdir
 from subprocess import check_output, STDOUT
 import threading
 from tkinter import *
@@ -15,7 +16,7 @@ os.chdir("/home/ubuntu/Desktop")
 # 
 window = tk.Tk()
 window.title('LEADTEK')
-window.geometry('800x370')
+window.geometry('800x600')
 window.configure(background='white')
 
 var = tk.StringVar()
@@ -46,18 +47,19 @@ harbor_link = ""
 netdata_link = ""
 
 def push_images():
+   print("To do something.") 
     
 
 def Readstatus(key):
-    
     print (_var.get(key))
     _var_obj = _var.get(key)
-    if _var_obj.get() == 1:
+    print (_var_obj.get())
 
 def deploy_components():
     global gdms_link
     global harbor_link
     global netdata_link
+    global _var
     if (var1.get() == 1) & (var2.get() == 0) & (var3.get() == 0) :
         host_name = "gdms"
         host_list = check_output("virsh list --all | sed -n '3, 1p' | awk '{print $2}'", shell=True)
@@ -113,8 +115,7 @@ def deploy_components():
             check_output('sudo docker-compose up -d', shell=True)
             harbor_link = 'https://rtxws.com:8443'
             label3['text'] = harbor_link
-            global _var
-            image_path = "/Users/Nigo/git_folders/nigo"
+            image_path = "/var/cache/images"
             image_list = listdir(image_path)
             print(image_list)
             _var = dict()
@@ -123,6 +124,8 @@ def deploy_components():
                 image = tk.Checkbutton(window, text=image, bg='white', variable=_var[image], onvalue=1, offvalue=0, command=lambda key=image: Readstatus(key))
                 image.pack(anchor=NW)  
             push_btn = tk.Button(window, text='Push_images', bg='white', command=lambda :thread_it(push_images)).pack(fill=X,anchor=S)
+            print (_var.items())
+            
     elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 0) :
         check_output('./run_netdata.sh', shell=True)
         netdata_link = 'http://172.16.10.153:19999'
