@@ -69,6 +69,7 @@ def push_images():
                     t += 1
     label4 = tk.Label(window, textvariable=pull_info, bg='white')
     label4.pack(fill=X,anchor=S)
+
 def Readstatus(key):
     _var_obj = _var.get(key)
     print(_var_obj.get())
@@ -110,23 +111,44 @@ def deploy_components():
                 gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
                 label['text'] = gdms_link
         if host_name in host_list.decode('utf-8'):
-            mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
-            ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
-            ip_command = " ".join(ip_exec)
-            t = 1
-            while t < 8:
-                ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
-                if ip_address.strip():
-                    break
-                    return ip_address
+            gdms_state = check_output("virsh list --all | sed -n '3, 1p' | awk '{print $3}'", shell=True).decode('utf-8')
+            if gdms_state.rstrip("\n") == "shut":
+                check_output("virsh start gdms", shell=True)
+                mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+                ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+                ip_command = " ".join(ip_exec)
+                t = 1
+                while t < 8:
+                    ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
+                    if ip_address.strip():
+                        break
+                        return ip_address
+                    else:
+                        t += 1
+                if ip_address == "":
+                    gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
+                    label['text'] = gdms_link
                 else:
-                    t += 1
-            if ip_address == "":
-                gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
-                label['text'] = gdms_link
+                    gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
+                    label['text'] = gdms_link                 
             else:
-                gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
-                label['text'] = gdms_link
+                mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+                ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+                ip_command = " ".join(ip_exec)
+                t = 1
+                while t < 8:
+                    ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
+                    if ip_address.strip():
+                        break
+                        return ip_address
+                    else:
+                        t += 1
+                if ip_address == "":
+                    gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
+                    label['text'] = gdms_link
+                else:
+                    gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
+                    label['text'] = gdms_link
     # harbor deploy
     elif (var1.get() == 0) & (var2.get() == 0) & (var3.get() == 1) :
         os.chdir("/home/ubuntu/harbor-master")
@@ -168,6 +190,7 @@ def deploy_components():
             push_btn = tk.Button(window, text='Push_images', bg='white', command=lambda :thread_it(push_images)).pack(fill=X,anchor=S)
     # netdata(gpu & system monitor tool
     elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 0) :
+        os.chdir("/home/ubuntu/Desktop")
         check_output('./run_netdata.sh', shell=True)
         netdata_link = 'http://172.16.10.153:19999'
         label2['text'] = netdata_link
@@ -198,9 +221,16 @@ def delete_components():
             harbor_link = 'harbor doesn`t installed.'
             label3['text'] = harbor_link
     elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 0) :
-        check_output('./run_netdata.sh', shell=True)
-        netdata_link = 'http://172.16.10.153:19999'
-        label2['text'] = netdata_link
+        netdata_list = check_output('docker ps', shell=True).decode('utf-8')
+        netdata = "netdata"
+        if netdata in netdata_list:
+            check_output('docker stop netdata', shell=True)
+            check_output('docker rm netdata', shell=True)            
+            netdata_link = 'netdata removed'
+            label2['text'] = netdata_link
+        else:
+            netdata_link = 'netdata doesn`t installed.'
+            label2['text'] = netdata_link
     else:
         print("To do something.")
 
@@ -223,52 +253,213 @@ def show_endpoint():
     global harbor_link
     global netdata_link    
     if (var1.get() == 1) & (var2.get() == 0) & (var3.get() == 0) :
-        mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
-        ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
-        ip_command = " ".join(ip_exec)
-        t = 1
-        while t < 8:
-            ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
-            if ip_address.strip():
-                break
-                return ip_address
-            else:
-                t += 1
-        if ip_address == "":
-            gdms_link = 'Can`t get GDMS endpoint, please check your kvm configuration.'
+        gdms_state = check_output("virsh list --all | sed -n '3, 1p' | awk '{print $3}'", shell=True).decode('utf-8')
+        if gdms_state.rstrip("\n") == "shut":
+            gdms_link = 'GDMS doesn`t installed.' 
             label['text'] = gdms_link
         else:
+            mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+            print(mac_address)
+            ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+            ip_command = " ".join(ip_exec)
+            t = 1
+            while t < 5:
+                ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
+                if ip_address.strip():
+                    break
+                    return ip_address
+            else:
+                t += 1
             gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
             label['text'] = gdms_link
     elif (var1.get() == 0) & (var2.get() == 0) & (var3.get() == 1) :
         os.chdir("/home/ubuntu/harbor-master")
-        docker_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
-        print(docker_list)
-        harbor_link = 'https://rtxws.com:8443'
-        label3['text'] = harbor_link
+        harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        harbor = "harbor"
+        if harbor in harbor_list:
+            harbor_link = 'https://rtxws.com:8443'
+            label3['text'] = harbor_link
+        else:
+            harbor_link = 'harbor doesn`t installed.'
+            label3['text'] = harbor_link        
     elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 0) :
-        netdata_link = 'http://172.16.10.153:19999'
-        label2['text'] = netdata_link
+        netdata_list = check_output('docker ps', shell=True).decode('utf-8')
+        netdata = "netdata"
+        if netdata in netdata_list:
+            netdata_link = 'http://172.16.10.153:19999'
+            label2['text'] = netdata_link
+        else:
+            netdata_link = 'netdata doesn`t installed.'
+            label2['text'] = netdata_link
+    elif (var1.get() == 1) & (var2.get() == 1) & (var3.get() == 0) :
+        gdms_state = check_output("virsh list --all | sed -n '3, 1p' | awk '{print $3}'", shell=True).decode('utf-8')
+        if gdms_state.rstrip("\n") == "shut":
+            gdms_link = 'GDMS doesn`t installed.' 
+            label['text'] = gdms_link
+        else:
+            mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+            ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+            ip_command = " ".join(ip_exec)
+            t = 1
+            while t < 5:
+                ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
+                if ip_address.strip():
+                    break
+                    return ip_address
+            else:
+                t += 1
+            gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
+            label['text'] = gdms_link
+        netdata_list = check_output('docker ps', shell=True).decode('utf-8')
+        netdata = "netdata"
+        if netdata in netdata_list:
+            netdata_link = 'http://172.16.10.153:19999'
+            label2['text'] = netdata_link
+        else:
+            netdata_link = 'netdata doesn`t installed.'
+            label2['text'] = netdata_link
+    elif (var1.get() == 1) & (var2.get() == 1) & (var3.get() == 1) :
+        gdms_state = check_output("virsh list --all | sed -n '3, 1p' | awk '{print $3}'", shell=True).decode('utf-8')
+        if gdms_state.rstrip("\n") == "shut":
+            gdms_link = 'GDMS doesn`t installed.' 
+            label['text'] = gdms_link
+        else:
+            mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+            ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+            ip_command = " ".join(ip_exec)
+            t = 1
+            while t < 5:
+                ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
+                if ip_address.strip():
+                    break
+                    return ip_address
+            else:
+                t += 1
+            gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
+            label['text'] = gdms_link
+        netdata_list = check_output('docker ps', shell=True).decode('utf-8')
+        netdata = "netdata"
+        if netdata in netdata_list:
+            netdata_link = 'http://172.16.10.153:19999'
+            label2['text'] = netdata_link
+        else:
+            netdata_link = 'netdata doesn`t installed.'
+            label2['text'] = netdata_link
+        os.chdir("/home/ubuntu/harbor-master")
+        harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        harbor = "harbor"
+        if harbor in harbor_list:
+            harbor_link = 'https://rtxws.com:8443'
+            label3['text'] = harbor_link
+        else:
+            harbor_link = 'harbor doesn`t installed.'
+            label3['text'] = harbor_link        
+    elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 1) :
+        netdata_list = check_output('docker ps', shell=True).decode('utf-8')
+        netdata = "netdata"
+        if netdata in netdata_list:
+            netdata_link = 'http://172.16.10.153:19999'
+            label2['text'] = netdata_link
+        else:
+            netdata_link = 'netdata doesn`t installed.'
+            label2['text'] = netdata_link
+        os.chdir("/home/ubuntu/harbor-master")
+        harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        harbor = "harbor"
+        if harbor in harbor_list:
+            harbor_link = 'https://rtxws.com:8443'
+            label3['text'] = harbor_link
+        else:
+            harbor_link = 'harbor doesn`t installed.'
+            label3['text'] = harbor_link        
+    elif (var1.get() == 1) & (var2.get() == 0) & (var3.get() == 1) :
+        gdms_state = check_output("virsh list --all | sed -n '3, 1p' | awk '{print $3}'", shell=True).decode('utf-8')
+        if gdms_state.rstrip("\n") == "shut":
+            gdms_link = 'GDMS doesn`t installed.' 
+            label['text'] = gdms_link
+        else:
+            mac_address = check_output("virsh domiflist gdms | awk '{print $5 }' | sed -n '3,1p'", shell=True).decode('utf-8')
+            ip_exec = ["sudo", "arp-scan", "--interface=br0", "--localnet | grep ", mac_address.replace('\n',''), "| awk '{print $1}'"]
+            ip_command = " ".join(ip_exec)
+            t = 1
+            while t < 5:
+                ip_address = check_output(ip_command, shell=True, timeout=5).decode('utf-8') 
+                if ip_address.strip():
+                    break
+                    return ip_address
+            else:
+                t += 1
+            gdms_link = 'http://' + ip_address.rstrip("\n") + ':8080/GDMSWeb/'
+            label['text'] = gdms_link
+        os.chdir("/home/ubuntu/harbor-master")
+        harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        harbor = "harbor"
+        if harbor in harbor_list:
+            harbor_link = 'https://rtxws.com:8443'
+            label3['text'] = harbor_link
+        else:
+            harbor_link = 'harbor doesn`t installed.'
+            label3['text'] = harbor_link        
+    elif (var1.get() == 0) & (var2.get() == 1) & (var3.get() == 1) :
+        netdata_list = check_output('docker ps', shell=True).decode('utf-8')
+        netdata = "netdata"
+        if netdata in netdata_list:
+            netdata_link = 'http://172.16.10.153:19999'
+            label2['text'] = netdata_link
+        else:
+            netdata_link = 'netdata doesn`t installed.'
+            label2['text'] = netdata_link
+        os.chdir("/home/ubuntu/harbor-master")
+        harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+        harbor = "harbor"
+        if harbor in harbor_list:
+            harbor_link = 'https://rtxws.com:8443'
+            label3['text'] = harbor_link
+        else:
+            harbor_link = 'harbor doesn`t installed.'
+            label3['text'] = harbor_link        
     else:
         print("To do something.")
-def show_images():
+
+def list_images():
     global _var
     global _varvalue
-    harbor_link = 'https://rtxws.com:8443'
-    label3['text'] = harbor_link
-    image_path = "/var/cache/images"
-    image_list = listdir(image_path)
-    _var = dict()
-    _varvalue = dict()
-    # dynamic create image tar file to checkbutton
-    for image in image_list:
-        _var[image] = tk.IntVar()
-        _varvalue[image] = 0
-        image = tk.Checkbutton(window, text=image, bg='white', variable=_var[image], onvalue=1, offvalue=0, command=lambda key=image: Readstatus(key))
-        image.pack(anchor=NW)
-    # create push_image button
-    push_btn = tk.Button(window, text='Push_images', bg='white', command=lambda :thread_it(push_images)).pack(fill=X,anchor=S)
+    os.chdir("/home/ubuntu/harbor-master")
+    harbor_list = check_output('sudo docker-compose ps', shell=True).decode('utf-8')
+    harbor = "harbor"
+    if harbor in harbor_list:
+        harbor_link = 'https://rtxws.com:8443'
+        label3['text'] = harbor_link
+        image_path = "/var/cache/images"
+        image_list = listdir(image_path)
+        _var = dict()
+        _varvalue = dict()
+        # dynamic create image tar file to checkbutton
+        for image in image_list:
+            _var[image] = tk.IntVar()
+            _varvalue[image] = 0
+            image = tk.Checkbutton(window, text=image, bg='white', variable=_var[image], onvalue=1, offvalue=0, command=lambda key=image: Readstatus(key))
+            image.pack(anchor=NW)
+        # create push_image button
+        push_btn = tk.Button(window, text='Push_images', bg='white', command=lambda :thread_it(push_images)).pack(fill=X,anchor=S)
+    else:
+        harbor_link = 'harbor doesn`t installed.'
+        label3['text'] = harbor_link        
 
+def clear():
+    global gdms_link
+    global harbor_link
+    global netdata_link
+    global _var
+    global _varvalue
+    gdms_link = ''
+    harbor_link = ''
+    netdata_link = ''
+    label['text'] = gdms_link
+    label2['text'] = netdata_link
+    label3['text'] = harbor_link
+
+# get checkbox values
 var1 = tk.IntVar()
 var2 = tk.IntVar()
 var3 = tk.IntVar()
@@ -291,17 +482,16 @@ c3.pack(anchor=SW)
 deploy_btn = tk.Button(window, text='DEPLOY', bg='white', command=lambda :thread_it(deploy_components)).pack(fill=X,anchor=S)
 delete_btn = tk.Button(window, text='DELETE', bg='white', command=lambda :thread_it(delete_components)).pack(fill=X,anchor=S)
 endpoint_btn = tk.Button(window, text='Endpoint', bg='white', command=lambda :thread_it(show_endpoint)).pack(fill=X,anchor=S)
-showimages_btn = tk.Button(window, text='Docker_images_list', bg='white', command=lambda :thread_it(show_images)).pack(fill=X,anchor=S)
+showimages_btn = tk.Button(window, text='Docker_images_list', bg='white', command=lambda :thread_it(list_images)).pack(fill=X,anchor=S)
+clear_btn = tk.Button(window, text='Clear', bg='white', command=lambda :thread_it(clear)).pack(fill=X,anchor=S)
 
 #Display_Label
 label = tk.Label(window, bg='white') 
 label.pack(fill=X,anchor=S)
 label.bind("<Button-1>", lambda e: endpoint(gdms_link))
-
 label2 = tk.Label(window, bg='white')
 label2.pack(fill=X,anchor=S)
 label2.bind("<Button-1>", lambda e: endpoint_netdata(netdata_link))
-
 label3 = tk.Label(window, bg='white')
 label3.pack(fill=X,anchor=S)
 label3.bind("<Button-1>", lambda e: endpoint_harbor(harbor_link))
