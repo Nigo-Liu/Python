@@ -1,0 +1,236 @@
+#!/bin/bash
+
+LOGFILE=/var/log/gdms_deployment.log
+nic="eth0"
+bridge="br0"
+partition="sda"
+
+fun_date()
+{
+    while IFS= read -r line; do
+    printf '%s %s\n' "$(date)" "$line";
+    done
+}
+
+fun_install_packages()
+{
+    echo "Install the packages for GDMS..."
+    echo "Check network connection..."
+    connect=$(wget -q --spider http://google.com ; echo $?)
+    if [ "$connect" -eq 0 ]
+    then 
+      echo "Network connection is stable."
+      echo "Install the packages..."
+      sudo apt-get update
+      sudo apt-get install -y arp-scan qemu-kvm libvirt-bin virt-manager bridge-utils
+    else 
+      echo "Network connection failed."
+      echo "Please check your network configuration."
+      exit 0
+    fi
+}
+
+fun_build_bridge()
+{
+    echo "Build network bridge interface..."
+    sudo nmcli con add type bridge ifname "$bridge"
+    sudo nmcli con add type bridge-slave ifname "$nic" master "$bridge"
+    sudo /etc/init.d/networking restart
+    sudo /etc/init.d/network-manager restart
+    sudo nmcli con down "$nic"
+    echo "Get IP address of a bridge... "
+    i=1
+    while [ $i -le 100 ]
+    do
+      bridgeip=$(sudo ifconfig "$bridge" | grep -w inet | awk -F ":" '{print $2}' | awk '{print $1}')
+      if [ -n "$bridgeip" ]
+      then
+        echo "The br0 IP : $bridgeip"
+        break
+      fi
+      i=$(( $i+1 ))
+      sleep 2
+      echo "Retry to get IP address of a bridge..."
+    done
+    if [ -z "$bridgeip" ]
+    then
+      echo "Cant get IP address of a bridge...."
+      echo "Please check your network configuration."
+      exit 0
+    fi
+}
+
+fun_enable_libvirt()
+{
+    echo "Enable libvirtd.service..."
+    sudo systemctl start libvirtd.service
+    sudo systemctl enable libvirtd.service
+    echo "Add user and group for kvm..."
+    sudo adduser `id -un` libvirt
+    sudo adduser `id -un` kvm
+}
+
+fun_untar()
+{
+    file=$1
+    match=$(($(grep --text --line-number -m1 '^PAYLOAD:$' ${file} | cut -d ':' -f 1) + 1))
+    echo "extract payload after line ${match}"
+    echo "Extracting..."
+    tail -n +${match} $0 | tar -xvf - -C /tmp/
+    echo "Check a folder exists..."
+    if [ -d "/tmp/gdms" ]
+    then
+      echo "GDMS folder exists."
+      echo "Check a image file exists..."
+      if [  -f "/tmp/gdms/gdms_v1.qcow2" ]
+      then
+        echo "The image file extracted successfully."
+        echo "Copying a image file..."
+        sudo rsync -avhP /tmp/gdms/gdms_v1.qcow2 /var/lib/libvirt/images/
+      else
+        echo "The image file extracted filed."
+        exit 0 
+      fi
+    else
+      echo "GDMS folder dose not exists."
+      exit 0
+    fi
+}
+
+fun_mount_hdd()
+{
+    echo "Initial data folder..."
+    sudo umount -f /gdms_data
+    sudo rm -rf /gdms_data
+    echo "Create a data folder..."
+    sudo mkdir -p /gdms_data
+    echo "Initial fstab list..."
+    sudo sed -i "/UUID/d" /etc/fstab
+    echo "Erase current signatures from disk..."
+    sudo wipefs --all --force /dev/"$partition"1
+    sudo wipefs --all --force /dev/"$partition"
+    echo "To create a partition..."    
+    echo -e "o\nn\np\n1\n\n\nw\n" | sudo fdisk /dev/"$partition"
+    echo "Format partition to ext4 type..."
+    sudo mkfs.ext4 /dev/"$partition"1
+    echo "Create fstab list..."
+    uuid=$(sudo blkid | grep "$partition"1 | grep -w UUID | awk '{print $2}' | awk -F '"' '{print $2}')
+    if [ "$uuid" != " " ]
+    then
+        sudo sed -i '$a UUID='$uuid' /gdms_data ext4 defaults 0 0' /etc/fstab
+    else
+        echo "The partition format failed."
+        echo "Please check your hard disk drive."
+        exit 0
+    fi
+    echo "Mount disk to data folder..."
+    sudo mount /dev/"$partition"1 /gdms_data
+    echo "Create a dat folder..."
+    sudo mkdir -p /gdms_data/dat
+    echo "Changing the owner and permissions..."
+    sudo chmod -R 777 /gdms_data
+    sudo chmod -R 775 /gdms_data/dat
+    sudo chown -R ubuntu:ubuntu /gdms_data
+}
+
+fun_move_script()
+{
+    echo "Move script file to system..."
+    sudo rm /usr/local/bin/turn_on.sh
+    sudo rsync -avhP /tmp/gdms/turn_on.sh /usr/local/bin/
+    echo "Modify the RTX rc.local file..."
+    sudo sed -i "/envinit/a sudo /usr/local/bin/turn_on.sh" /etc/rc.local
+}
+
+
+fun_convert_image()
+{
+    echo "Get a rtx host IP..."
+    rtxip=$(sudo ifconfig "$bridge" | grep -w inet | awk -F ":" '{print $2}' | awk '{print $1}')
+    echo "The rtx host IP : $rtxip"
+    echo "Convert image type..."
+    sudo qemu-img convert -f qcow2 -O raw \
+    /var/lib/libvirt/images/gdms_v1.qcow2 \
+    /var/lib/libvirt/images/gdms_v1.img
+    echo "Check a image file exists..."
+    if [ -f "/var/lib/libvirt/images/gdms_v1.img" ]
+    then
+      echo "GDMS image file exists."
+      echo "Insert the script file into the GDMS..."
+      sudo mkdir -p /tmp/image
+      sudo mount -o loop,offset=$((2048 * 512)) /var/lib/libvirt/images/gdms_v1.img /tmp/image
+      sudo sed -i "s/rtxip/$rtxip/g" /tmp/gdms/mount_nfs.sh
+      sudo rsync -avhP /tmp/gdms/mount_nfs.sh /tmp/image/usr/local/bin/
+      echo "Modify the GDMS rc.local file..."
+      sudo sed -i "/restart/a sudo /usr/local/bin/mount_nfs.sh" /tmp/image/etc/rc.local
+      sudo umount -f /tmp/image/
+    else
+      echo "GDMS image file dose not exists."
+      exit 0
+    fi    
+}
+
+fun_turn_on_nfs()
+{
+    echo "Turn on NFS-Server..."
+    docker_list=$(echo 'ubuntu' | sudo -S docker ps | grep nfs-server | awk '{print $10}' )
+    echo $docker_list
+    if [ "$docker_list" = "nfs-server" ]
+    then
+        echo "The NFS-Server container was already turned on."
+    else
+        docker pull nigoliu/nfs-server:latest
+        docker run -d --privileged --restart=always \
+        --net=host --name=nfs-server \
+        -v /gdms_data/dat:/dat -e NFS_EXPORT_DIR_1=/dat \
+        -e NFS_EXPORT_DOMAIN_1=\* \
+        -e NFS_EXPORT_OPTIONS_1=rw,insecure,no_subtree_check,no_root_squash,fsid=1 \
+        nigoliu/nfs-server:latest
+        sleep 10
+        echo "The NFS-Server has been created successfully."
+        
+    fi
+}
+
+fun_delete_file()
+{
+    echo "Delete the GDMS installation files..."
+    sudo rm -rf /tmp/gdms
+    sudo rm -rf /tmp/image
+    sudo rm /var/lib/libvirt/images/gdms_v1.qcow2
+}
+
+
+deploy()
+{
+    fun_install_packages
+    fun_build_bridge
+    fun_enable_libvirt
+    fun_untar $0
+    fun_move_script
+    fun_mount_hdd
+    fun_convert_image
+    fun_turn_on_nfs
+    fun_delete_file  
+}
+
+read -p "Do you want to install the GDMS ? (y/n) : " ans
+result=`echo ${ans} | tr "[:upper:]" "[:lower:]"`
+
+# exit installation
+if [ ! -n "${result}" ]
+then
+   read -p "Please input (y/n) : " ans
+   exit 1
+elif [ ${result} != "y" ]
+then
+   echo "Exit installation."
+   exit 0
+fi
+
+# start to install
+deploy 2>&1 | fun_date | sudo tee -a $LOGFILE
+echo "Reboot system now..."
+sleep 3
+sudo shutdown -r now
+exit 0
